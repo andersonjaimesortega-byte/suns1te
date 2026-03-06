@@ -1,23 +1,55 @@
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Platform, ScrollView, ActivityIndicator, useWindowDimensions, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import React, { useState, useCallback, useEffect } from 'react';
 import { WorkLogRepository } from '../src/features/log/data/repositories/WorkLogRepository';
 import { SettingsRepository } from '../src/features/log/data/repositories/SettingsRepository';
 import { AuthRepository } from '../src/features/auth/data/repositories/AuthRepository';
+import { AccessRepository } from '../src/features/auth/data/repositories/AccessRepository';
 import { PdfGenerator } from '../src/shared/utils/PdfGenerator';
 import { ReportBuilder } from '../src/features/log/domain/logic/ReportBuilder';
 import { Alert } from 'react-native';
 
 export default function HomeScreen() {
-    const router = useRouter();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-    const [logs, setLogs] = useState([]);
-    const [residentName, setResidentName] = useState('Ingeniero Residente');
+    const [employeeId, setEmployeeId] = useState('');
+    const [reportName, setReportName] = useState('');
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [verifyError, setVerifyError] = useState('');
 
     const repository = new WorkLogRepository();
     const settingsRepo = new SettingsRepository();
     const authRepo = new AuthRepository();
+    const accessRepo = new AccessRepository();
+
+    const handleVerify = async () => {
+        if (!employeeId.trim() || !reportName.trim()) {
+            setVerifyError('Por favor completa ambos campos.');
+            return;
+        }
+
+        setIsVerifying(true);
+        setVerifyError('');
+
+        try {
+            await accessRepo.syncIds();
+            const isValid = await accessRepo.validateAccess(employeeId.trim(), reportName.trim());
+
+            if (isValid) {
+                await authRepo.login(employeeId.trim(), 'pwa_access', true, reportName.trim());
+                setIsLoggedIn(true);
+            } else {
+                setVerifyError('ID o Nombre de Informe no válidos.');
+            }
+        } catch (err) {
+            console.error('Error verificando acceso:', err);
+            setVerifyError('Error de conexión.');
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [logs, setLogs] = useState([]);
+    const [residentName, setResidentName] = useState('Ingeniero Residente');
 
     useEffect(() => {
         const init = async () => {
@@ -125,16 +157,43 @@ export default function HomeScreen() {
                     <Text style={styles.landingTitle}>🏗️ SunSite</Text>
                     <Text style={styles.landingSubtitle}>La plataforma inteligente para el control de obra</Text>
 
-                    <View style={styles.actionCard}>
-                        <Text style={styles.cardTitle}>Control de Obra Profesional</Text>
-                        <Text style={styles.cardText}>Digitaliza tus bitácoras y genera reportes PDF técnicos al instante desde cualquier navegador.</Text>
+                    <View style={styles.verificationCard}>
+                        <Text style={styles.cardTitle}>Control de Acceso Seguro</Text>
+                        <Text style={styles.cardText}>Ingresa tus credenciales para gestionar bitácoras técnicos.</Text>
 
-                        <TouchableOpacity style={styles.primaryBtnWeb} onPress={() => router.push('/login')}>
-                            <Text style={styles.primaryBtnTextWeb}>Acceder a la Versión Web →</Text>
+                        <Text style={styles.inputLabel}>ID de Empleado</Text>
+                        <TextInput
+                            style={styles.landingInput}
+                            placeholder="Ej: EMP-1234"
+                            placeholderTextColor="#64748b"
+                            value={employeeId}
+                            onChangeText={setEmployeeId}
+                            autoCapitalize="characters"
+                        />
+
+                        <Text style={styles.inputLabel}>Nombre del Informe</Text>
+                        <TextInput
+                            style={styles.landingInput}
+                            placeholder="Ej: Mini-Granja Alfa"
+                            placeholderTextColor="#64748b"
+                            value={reportName}
+                            onChangeText={setReportName}
+                        />
+
+                        {verifyError ? <Text style={styles.errorText}>{verifyError}</Text> : null}
+
+                        <TouchableOpacity
+                            style={[styles.primaryBtnWeb, isVerifying && { opacity: 0.7 }]}
+                            onPress={handleVerify}
+                            disabled={isVerifying}
+                        >
+                            <Text style={styles.primaryBtnTextWeb}>
+                                {isVerifying ? 'Verificando...' : 'Verificar y Entrar 🔓'}
+                            </Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.secondaryBtnWeb} onPress={() => router.push('/register')}>
-                            <Text style={styles.secondaryBtnTextWeb}>Crear una cuenta nueva</Text>
+                        <TouchableOpacity style={styles.secondaryBtnWeb} onPress={() => router.push('/login')}>
+                            <Text style={styles.secondaryBtnTextWeb}>Modo Administrador</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -412,6 +471,42 @@ const styles = StyleSheet.create({
         marginBottom: 30,
         lineHeight: 24,
     },
+    verificationCard: {
+        backgroundColor: '#0f172a',
+        padding: 30,
+        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+        width: '100%',
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 20,
+    },
+    inputLabel: {
+        color: '#94a3b8',
+        fontSize: 11,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: 8,
+        marginTop: 10,
+    },
+    landingInput: {
+        backgroundColor: '#020617',
+        color: '#ffffff',
+        borderRadius: 12,
+        padding: 15,
+        fontSize: 15,
+        borderWidth: 1,
+        borderColor: '#1e293b',
+        marginBottom: 10,
+    },
+    errorText: {
+        color: '#ef4444',
+        fontSize: 13,
+        marginBottom: 15,
+        fontWeight: '600',
+    },
     buttonGroup: {
         width: '100%',
         gap: 12,
@@ -423,6 +518,7 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         alignItems: 'center',
         width: '100%',
+        marginTop: 10,
         marginBottom: 12,
     },
     primaryBtnTextWeb: {

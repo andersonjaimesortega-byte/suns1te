@@ -1,14 +1,52 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, useWindowDimensions, TextInput } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 
 export default function LandingPage() {
     const { width } = useWindowDimensions();
     const router = useRouter();
 
+    const [employeeId, setEmployeeId] = React.useState('');
+    const [reportName, setReportName] = React.useState('');
+    const [isVerifying, setIsVerifying] = React.useState(false);
+    const [error, setError] = React.useState('');
+
+    const accessRepo = React.useMemo(() => new (require('../src/features/auth/data/repositories/AccessRepository').AccessRepository)(), []);
+    const authRepo = React.useMemo(() => new (require('../src/features/auth/data/repositories/AuthRepository').AuthRepository)(), []);
+
     if (Platform.OS !== 'web') return null;
 
     const isLarge = width > 1024;
+
+    const handleVerify = async () => {
+        if (!employeeId.trim() || !reportName.trim()) {
+            setError('Por favor completa ambos campos.');
+            return;
+        }
+
+        setIsVerifying(true);
+        setError('');
+
+        try {
+            // Sincronizar IDs primero (opcional pero recomendado)
+            await accessRepo.syncIds();
+
+            // Validar acceso (usamos reportName para mapear a mini_granja por ahora)
+            const isValid = await accessRepo.validateAccess(employeeId.trim(), reportName.trim());
+
+            if (isValid) {
+                await authRepo.login(employeeId.trim(), 'pwa_access', true, reportName.trim());
+                router.replace('/');
+            } else {
+                setError('ID o Nombre de Informe no válidos.');
+            }
+        } catch (err) {
+            console.error('Error verificando acceso:', err);
+            setError('Error de conexión con el servidor.');
+        } finally {
+            setIsVerifying(false);
+        }
+    };
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -17,7 +55,7 @@ export default function LandingPage() {
                 <Text style={styles.navLogo}>🏗️ SunSite</Text>
                 <Link href="/login" asChild>
                     <TouchableOpacity style={styles.navLoginBtn}>
-                        <Text style={styles.navLoginText}>Iniciar Sesión</Text>
+                        <Text style={styles.navLoginText}>Modo Admin</Text>
                     </TouchableOpacity>
                 </Link>
             </View>
@@ -26,19 +64,43 @@ export default function LandingPage() {
             <View style={[styles.hero, isLarge && styles.heroLarge]}>
                 <View style={styles.heroContent}>
                     <View style={styles.badge}>
-                        <Text style={styles.badgeText}>NUEVO: SunSite v2.0 disponible</Text>
+                        <Text style={styles.badgeText}>SISTEMA DE VERIFICACIÓN ACTIVO</Text>
                     </View>
-                    <Text style={styles.title}>La bitácora digital que tu obra <Text style={styles.titleHighlight}>desatada</Text></Text>
+                    <Text style={styles.title}>Acceso Seguro a tu <Text style={styles.titleHighlight}>Proyecto</Text></Text>
                     <Text style={styles.subtitle}>
-                        Automatiza tus reportes diarios con voz, captura firmas digitales y genera PDFs profesionales en segundos. Todo sincronizado en la nube.
+                        Ingresa tus credenciales autorizadas para gestionar bitácoras y generar reportes técnicos legales.
                     </Text>
 
-                    <View style={styles.ctaGroup}>
-                        <TouchableOpacity style={styles.primaryBtn} onPress={() => router.push('/register')}>
-                            <Text style={styles.primaryBtnText}>Comenzar Gratis</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.secondaryBtn} onPress={() => router.push('/login')}>
-                            <Text style={styles.secondaryBtnText}>Ver Demo Web →</Text>
+                    <View style={styles.verificationForm}>
+                        <Text style={styles.formLabel}>ID de Empleado</Text>
+                        <TextInput
+                            style={styles.formInput}
+                            placeholder="Ej: EMP-1234"
+                            placeholderTextColor="#64748b"
+                            value={employeeId}
+                            onChangeText={setEmployeeId}
+                            autoCapitalize="characters"
+                        />
+
+                        <Text style={styles.formLabel}>Nombre o ID del Informe</Text>
+                        <TextInput
+                            style={styles.formInput}
+                            placeholder="Ej: Mini-Granja Alfa"
+                            placeholderTextColor="#64748b"
+                            value={reportName}
+                            onChangeText={setReportName}
+                        />
+
+                        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                        <TouchableOpacity
+                            style={[styles.verifyBtn, isVerifying && { opacity: 0.7 }]}
+                            onPress={handleVerify}
+                            disabled={isVerifying}
+                        >
+                            <Text style={styles.verifyBtnText}>
+                                {isVerifying ? 'Verificando...' : 'Verificar y Entrar 🔓'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -63,7 +125,7 @@ export default function LandingPage() {
 
             {/* Stats Row */}
             <View style={styles.statsRow}>
-                <View style={styles.statItem}>
+                <View style={statItem}>
                     <Text style={styles.statNumber}>10k+</Text>
                     <Text style={styles.statLabel}>Reportes generados</Text>
                 </View>
@@ -199,35 +261,55 @@ const styles = StyleSheet.create({
         marginBottom: 40,
         maxWidth: 600,
     },
-    ctaGroup: {
-        flexDirection: 'row',
-        gap: 16,
-    },
-    primaryBtn: {
-        backgroundColor: '#1D99CC',
-        paddingHorizontal: 32,
-        paddingVertical: 18,
-        borderRadius: 16,
-        shadowColor: '#1D99CC',
-        shadowOffset: { width: 0, height: 10 },
+    verificationForm: {
+        backgroundColor: '#0f172a',
+        padding: 32,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+        width: '100%',
+        maxWidth: 450,
+        shadowColor: '#000',
         shadowOpacity: 0.3,
-        shadowRadius: 20,
+        shadowRadius: 30,
     },
-    primaryBtnText: {
-        color: '#ffffff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    secondaryBtn: {
-        backgroundColor: 'transparent',
-        paddingHorizontal: 32,
-        paddingVertical: 18,
-        borderRadius: 16,
-    },
-    secondaryBtnText: {
+    formLabel: {
         color: '#94a3b8',
-        fontSize: 18,
+        fontSize: 12,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+        marginBottom: 8,
+    },
+    formInput: {
+        backgroundColor: '#020617',
+        color: '#ffffff',
+        borderRadius: 12,
+        padding: 16,
+        fontSize: 16,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: '#1e293b',
+    },
+    errorText: {
+        color: '#ef4444',
+        fontSize: 14,
+        marginBottom: 16,
         fontWeight: '600',
+    },
+    verifyBtn: {
+        backgroundColor: '#1D99CC',
+        paddingVertical: 18,
+        borderRadius: 14,
+        alignItems: 'center',
+        shadowColor: '#1D99CC',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+    },
+    verifyBtnText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     heroImagePlaceholder: {
         flex: 1,
@@ -242,7 +324,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
         padding: 24,
-        backdropFilter: 'blur(10px)', // Valid on some browser environments via CSS
     },
     cardHeader: {
         flexDirection: 'row',
