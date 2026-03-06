@@ -89,7 +89,12 @@ export class PdfGenerator {
                         ${renderTable('4. Pendientes Próximo Turno', sections.pendientes)}
                         <div class="footer">
                             <div class="sig-box">
-                                ${signature ? `<img src="${signature}" class="sig-img" />` : '<div style="height: 80px; border-bottom: 1px solid #0f172a; margin-bottom: 5px;"></div>'}
+                                ${signature === 'DATA:SUNSITE_DIGITAL_SIG'
+                    ? `<div style="height: 80px; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #0f172a; margin-bottom: 5px; font-family: 'Courier New', Courier, monospace; color: #1D99CC; font-weight: bold; font-size: 14px;">
+                                         /// FIRMA DIGITAL SUNSITE RECONOCIDA ///
+                                       </div>`
+                    : (signature ? `<img src="${signature}" class="sig-img" />` : '<div style="height: 80px; border-bottom: 1px solid #0f172a; margin-bottom: 5px;"></div>')
+                }
                                 <div style="font-size: 12px; font-weight: bold; color: #0f172a;">${header.engineer}</div>
                                 <div style="font-size: 10px; color: #64748b;">Firma de Responsabilidad</div>
                             </div>

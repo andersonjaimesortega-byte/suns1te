@@ -8,6 +8,7 @@ import { SettingsRepository } from '../../data/repositories/SettingsRepository';
 import { ConstructionValidator } from '../../domain/validators/ConstructionValidator';
 import { PdfGenerator } from '../../../../shared/utils/PdfGenerator';
 import { ReportBuilder } from '../../domain/logic/ReportBuilder';
+import { AuthRepository } from '../../auth/data/repositories/AuthRepository';
 import SignatureCapture from '../components/SignatureCapture';
 
 const CATEGORIES = ['Hormigonado', 'Encofrado', 'Acero de Refuerzo', 'Excavación', 'Limpieza'];
@@ -31,6 +32,7 @@ export default function LogCaptureScreen() {
 
     const repository = new WorkLogRepository();
     const settingsRepo = new SettingsRepository();
+    const authRepo = new AuthRepository();
 
     useEffect(() => {
         const loadInitialData = async () => {
