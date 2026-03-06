@@ -126,32 +126,15 @@ export default function HomeScreen() {
                     <Text style={styles.landingSubtitle}>La plataforma inteligente para el control de obra</Text>
 
                     <View style={styles.actionCard}>
-                        <Text style={styles.cardTitle}>Lleva SunSite en tu bolsillo</Text>
-                        <Text style={styles.cardText}>Digitaliza tus bitácoras y genera reportes PDF profesionales al instante.</Text>
+                        <Text style={styles.cardTitle}>Control de Obra Profesional</Text>
+                        <Text style={styles.cardText}>Digitaliza tus bitácoras y genera reportes PDF técnicos al instante desde cualquier navegador.</Text>
 
-                        <View style={styles.buttonGroup}>
-                            <TouchableOpacity
-                                style={styles.downloadBtnAndroid}
-                                onPress={() => {
-                                    // Point to a file that will be in the dist/public folder
-                                    window.open('/sunsite.apk', '_blank');
-                                }}
-                            >
-                                <Text style={styles.downloadBtnText}>Descargar para Android (APK)</Text>
-                            </TouchableOpacity>
+                        <TouchableOpacity style={styles.primaryBtnWeb} onPress={() => router.push('/login')}>
+                            <Text style={styles.primaryBtnTextWeb}>Acceder a la Versión Web →</Text>
+                        </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.downloadBtnIOS}
-                                onPress={() => {
-                                    alert('Para instalar en iPhone: \n1. Instala "TestFlight" de la App Store. \n2. Abre el link de invitación que te enviaremos por correo.');
-                                }}
-                            >
-                                <Text style={styles.downloadBtnText}>Instalar en iOS (TestFlight)</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <TouchableOpacity style={styles.webBtn} onPress={() => router.push('/login')}>
-                            <Text style={styles.webBtnTextHeader}>O usa la versión Web →</Text>
+                        <TouchableOpacity style={styles.secondaryBtnWeb} onPress={() => router.push('/register')}>
+                            <Text style={styles.secondaryBtnTextWeb}>Crear una cuenta nueva</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -434,30 +417,24 @@ const styles = StyleSheet.create({
         gap: 12,
         marginBottom: 20,
     },
-    downloadBtnAndroid: {
-        backgroundColor: '#3BB339',
-        paddingVertical: 18,
-        borderRadius: 15,
-        alignItems: 'center',
-        width: '100%',
-    },
-    downloadBtnIOS: {
+    primaryBtnWeb: {
         backgroundColor: '#1D99CC',
         paddingVertical: 18,
         borderRadius: 15,
         alignItems: 'center',
         width: '100%',
+        marginBottom: 12,
     },
-    downloadBtnText: {
+    primaryBtnTextWeb: {
         color: '#ffffff',
         fontSize: 16,
         fontWeight: 'bold',
     },
-    webBtn: {
+    secondaryBtnWeb: {
         paddingVertical: 10,
         alignItems: 'center',
     },
-    webBtnTextHeader: {
+    secondaryBtnTextWeb: {
         color: '#94a3b8',
         fontSize: 14,
         fontWeight: '600',
