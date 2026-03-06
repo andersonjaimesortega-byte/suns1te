@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "SunSite",
+    "slug": "SunSite",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "sunsite",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sunsite.logapp",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "SunSite requiere acceso al micrófono para el dictado de reportes de obra.",
+        "NSPhotoLibraryUsageDescription": "SunSite requiere acceso a la galería para adjuntar fotos a los reportes."
+      }
+    },
+    "android": {
+      "package": "com.sunsite.logapp",
+      "permissions": [
+        "RECORD_AUDIO",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "SunSite - Control de Obra Inteligente",
+      "shortName": "SunSite",
+      "description": "La plataforma inteligente para el control de obra y bitácoras digitales.",
+      "themeColor": "#0f172a",
+      "backgroundColor": "#0f172a",
+      "display": "standalone",
+      "orientation": "any",
+      "lang": "es-MX"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite"
+    ]
+  }
+}
