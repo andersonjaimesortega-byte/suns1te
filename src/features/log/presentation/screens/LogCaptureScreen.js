@@ -8,7 +8,7 @@ import { SettingsRepository } from '../../data/repositories/SettingsRepository';
 import { ConstructionValidator } from '../../domain/validators/ConstructionValidator';
 import { PdfGenerator } from '../../../../shared/utils/PdfGenerator';
 import { ReportBuilder } from '../../domain/logic/ReportBuilder';
-import { AuthRepository } from '../../auth/data/repositories/AuthRepository';
+import { AuthRepository } from '../../../auth/data/repositories/AuthRepository';
 import SignatureCapture from '../components/SignatureCapture';
 
 const CATEGORIES = ['Hormigonado', 'Encofrado', 'Acero de Refuerzo', 'Excavación', 'Limpieza'];
